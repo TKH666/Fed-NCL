@@ -21,9 +21,6 @@ from models.Fed import FedAvg, FedAvg_noise_loss, FedAvg_noise_weight, FedAvg_no
     FedAvg_noise_layer_weight, FedAvg_withDetectionNoise, trimmed_mean, agg_feddyn
 from models.test import test_img
 
-#from models.models import LenetMnist,  VGG16Cifar10,  ResNet18Cifar10 ,ResNet18Cifar100
-#
-
 
 
 from models.noise import bernoulli_function, remove_file
@@ -129,22 +126,10 @@ if __name__ == '__main__':
             len_in *= x
         net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
 
-    elif args.model == 'LenetMnist':
+    elif args.model == 'Lenet':
         net_glob = LenetMnist(args=args).to(args.device)
-    elif args.model == 'VGG16Cifar10':
+    elif args.model == 'VGG16':
         net_glob = VGG16Cifar10(args=args).to(args.device)
-        
-    elif args.model == 'ResNet18Cifar10':
-        net_glob = ResNet18Cifar10(args=args).to(args.device)
-    elif args.model == 'ResNet18Cifar100':
-        net_glob = ResNet18Cifar100(args=args).to(args.device) #ResNet18Tiny, VGG16Cifar10
-    elif args.model == 'ResNet18Tiny':
-        net_glob = ResNet18Tiny(args=args).to(args.device)
-    elif args.model == 'VGG16Cifar10':
-        net_glob = VGG16Cifar10(args=args).to(args.device)
-        # net_glob.parameters()
-    elif args.model == 'CNN_6':
-        net_glob = CNN_6().to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)

@@ -44,7 +44,7 @@ class DatasetSplit_noise(Dataset):
 
 
 
-#def generated_noise_data(dataset=dataset_train, idxs=dict_users, noise_degree, num_class):
+
 def generated_noise_data(dataset_train, dict_users, noise_degree, num_class):
     dataset_train_noise = dataset_train
 
@@ -63,11 +63,7 @@ def generated_noise_data(dataset_train, dict_users, noise_degree, num_class):
             if(random_change<noise_degree[i]):
                 noise_info[i][0]+=1
                 #dataset_train_noise[sample_idx][1]=random.randint(0,num_class)#change label
-                noise_label[sample_idx]=random.randint(0,num_class-1)#change label
-            # else:
-            #     noise_label[sample_idx]=dataset_train[sample_idx][1]#keep label
-    #print("-------------------------------",noise_label)
-    #return dataset_train_noise
+                noise_label[sample_idx]=random.randint(0,num_class-1) # change label
     dict_users_train=list()
     # dict_users_val=list()
     for i in range(len(noise_degree)):
