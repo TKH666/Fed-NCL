@@ -30,18 +30,15 @@ todo
 
 If you find the code and dataset useful, please cite our paper.
 
-> @misc{https://doi.org/10.48550/arxiv.2106.13239,
->   doi = {10.48550/ARXIV.2106.13239},
->
->   url = {https://arxiv.org/abs/2106.13239},
->
->   author = {Tam, Kahou and Li, Li and Han, Bo and Xu, Chengzhong and Fu, Huazhu},
->
->   title = {Federated Noisy Client Learning},
->
->   publisher = {arXiv},
->
->   year = {2021},
->
->   copyright = {arXiv.org perpetual, non-exclusive license}
-> }
+```
+@misc{https://doi.org/10.48550/arxiv.2106.13239,
+  doi = {10.48550/ARXIV.2106.13239},
+  url = {https://arxiv.org/abs/2106.13239},
+  author = {Tam, Kahou and Li, Li and Han, Bo and Xu, Chengzhong and Fu, Huazhu},
+  title = {Federated Noisy Client Learning},
+  publisher = {arXiv},
+  year = {2021},
+  copyright = {arXiv.org perpetual, non-exclusive license}
+}
+```
+
