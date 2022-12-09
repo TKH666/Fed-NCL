@@ -89,14 +89,6 @@ def non_iid_dirichlet_sampling(y_train, num_classes, p, num_users, seed, alpha_d
     for ck in range(num_users):
         dict_users[ck]=list(dict_users[ck])
 
-    # plt.figure(figsize=(20, 3))
-    # plt.hist([train_labels[idc] for idc in client_idcs], stacked=True,
-    #          bins=np.arange(min(train_labels) - 0.5, max(train_labels) + 1.5, 1),
-    #          label=["Label {}".format(i) for i in range(num_classes)], rwidth=0.5)
-    # plt.xticks(np.arange(num_users))
-    # plt.legend()
-    # plt.savefig("./1.png")
-
     return dict_users
 
 def unbalance_iid(dataset,args):
@@ -126,11 +118,3 @@ def unbalance_iid(dataset,args):
     return dict_users
 
 
-if __name__ == '__main__':
-    dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True,
-                                   transform=transforms.Compose([
-                                       transforms.ToTensor(),
-                                       transforms.Normalize((0.1307,), (0.3081,))
-                                   ]))
-    num = 100
-    d = mnist_noniid(dataset_train, num)

@@ -9,21 +9,21 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import copy
 import numpy as np
-import  torchvision
 from torchvision import datasets, transforms
 import torch
 import os
-from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, non_iid_dirichlet_sampling,unbalance_iid
+from utils.sampling import mnist_iid,  cifar_iid, non_iid_dirichlet_sampling,unbalance_iid
 from utils.options import args_parser
-from models.Update import LocalUpdate, generated_noise_data
-from models.Nets import MLP, CNNMnist, CNNCifar , LenetMnist ,  ResNet18Cifar10 ,ResNet18Cifar100, ResNet18Tiny, VGG16Cifar10,CNN_6
+from models.Update import LocalUpdate
+from utils.data_preprocessing import generated_noise_data
+from models.Nets import  LenetMnist ,  VGG16Cifar10
 from models.Fed import FedAvg, FedAvg_noise_loss, FedAvg_noise_weight, FedAvg_noise_loss_and_weight, \
     FedAvg_noise_layer_weight, FedAvg_withDetectionNoise, trimmed_mean, agg_feddyn
 from models.test import test_img
 
 
 
-from models.noise import bernoulli_function, remove_file
+from models.noise import bernoulli_function
 
 
 if __name__ == '__main__':
@@ -73,60 +73,13 @@ if __name__ == '__main__':
             dict_users = non_iid_dirichlet_sampling(y_train=y_train, num_classes=args.num_classes, p=args.p_dirichlet,
                                                     num_users=args.num_users, seed=42,
                                                     alpha_dirichlet=args.alpha_dirichlet)
-    elif args.dataset == 'cifar100':
-        trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=[0.5071, 0.4867, 0.4408], 
-                                                                     std=[0.2675, 0.2565, 0.2761])])
-        dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=trans_cifar)
-        dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=trans_cifar)
-        if args.iid:
-            dict_users = cifar_iid(dataset_train, args.num_users)
-        else:
-            exit('Error: only consider IID setting in CIFAR100')
-    elif args.dataset == 'tiny_imagenet':
-
-        data_dir="./data/tiny-imagenet-200"
-        # transform_train = transforms.Compose(
-        #     [transforms.RandomResizedCrop(32), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
-        #      normalize, ])
-        transform_train = transforms.Compose([
-                                                #transforms.RandomResizedCrop(32),
-                                                #transforms.Resize(32),
-                                                #transforms.RandomRotation(20),
-                                                #transforms.RandomHorizontalFlip(0.5),
-                                                transforms.ToTensor(),
-                                                transforms.Normalize([0.4802, 0.4481, 0.3975], [0.2302, 0.2265, 0.2262]),
-                                            ])
-        #transform_test = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), normalize, ])
-        transform_test = transforms.Compose([
-                                                #transforms.Resize(32),
-                                                transforms.ToTensor(),
-                                                transforms.Normalize([0.4802, 0.4481, 0.3975], [0.2302, 0.2265, 0.2262]),
-                                            ])
-        transform = transform_test
-        dataset_train = torchvision.datasets.ImageFolder(root=os.path.join(data_dir, 'train'), transform=transform_train)
-        dataset_test = torchvision.datasets.ImageFolder(root=os.path.join(data_dir, 'val'), transform=transform_test)
-
-        if args.iid:
-            dict_users = cifar_iid(dataset_train, args.num_users)
-        else:
-            exit('Error: only consider IID setting in CIFAR10')
 
     else:
         exit('Error: unrecognized dataset')
     img_size = dataset_train[0][0].shape
 
     # build model  LenetMnist  VGG16Cifar10  ResNet18Cifar10 ResNet18Cifar100
-    if args.model == 'cnn' and args.dataset == 'cifar10':
-        net_glob = CNNCifar(args=args).to(args.device)
-    elif args.model == 'cnn' and args.dataset == 'mnist':
-        net_glob = CNNMnist(args=args).to(args.device)
-    elif args.model == 'mlp':
-        len_in = 1
-        for x in img_size:
-            len_in *= x
-        net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
-
-    elif args.model == 'Lenet':
+    if args.model == 'Lenet':
         net_glob = LenetMnist(args=args).to(args.device)
     elif args.model == 'VGG16':
         net_glob = VGG16Cifar10(args=args).to(args.device)

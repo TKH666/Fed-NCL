@@ -12,6 +12,7 @@ from sklearn import metrics
 import numpy as np
 import random
 
+
 class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):
         self.dataset = dataset
@@ -45,34 +46,6 @@ class DatasetSplit_noise(Dataset):
 
 
 
-def generated_noise_data(dataset_train, dict_users, noise_degree, num_class):
-    dataset_train_noise = dataset_train
-
-    #print("-------------------------------",dataset_train_noise)
-    
-    noise_label=list()
-    for i in range(len(dataset_train)):
-        noise_label.append(dataset_train[i][1])
-    #print("-------------------------------",noise_label)
-    noise_info={k:[0,len(v)] for k,v in dict_users.items()}
-    for i in range(len(noise_degree)):
-        for j in range(len(dict_users[i])):
-            sample_idx = dict_users[i][j]
-            random_change = random.random()
-            #print(dataset_train_noise[sample_idx]) 
-            if(random_change<noise_degree[i]):
-                noise_info[i][0]+=1
-                #dataset_train_noise[sample_idx][1]=random.randint(0,num_class)#change label
-                noise_label[sample_idx]=random.randint(0,num_class-1) # change label
-    dict_users_train=list()
-    # dict_users_val=list()
-    for i in range(len(noise_degree)):
-        np.random.shuffle(dict_users[i])
-        # idx_train = dict_users[i][(len(dict_users[i])//10):]
-        # idx_val = dict_users[i][:(len(dict_users[i])//10)]
-        dict_users_train.append(dict_users[i])
-        # dict_users_val.append(idx_val)
-    return noise_label, dict_users_train,noise_info
 
 
 
