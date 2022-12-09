@@ -16,7 +16,7 @@ from utils.sampling import mnist_iid,  cifar_iid, non_iid_dirichlet_sampling,unb
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from utils.data_preprocessing import generated_noise_data
-from models.Nets import  LenetMnist ,  VGG16Cifar10
+from nets.models import  Lenet ,  VGG16
 from models.Fed import FedAvg, FedAvg_noise_loss, FedAvg_noise_weight, FedAvg_noise_loss_and_weight, \
     FedAvg_noise_layer_weight, FedAvg_withDetectionNoise, trimmed_mean, agg_feddyn
 from models.test import test_img
@@ -78,11 +78,11 @@ if __name__ == '__main__':
         exit('Error: unrecognized dataset')
     img_size = dataset_train[0][0].shape
 
-    # build model  LenetMnist  VGG16Cifar10  ResNet18Cifar10 ResNet18Cifar100
+    # build model:  Lenet  VGG16
     if args.model == 'Lenet':
-        net_glob = LenetMnist(args=args).to(args.device)
+        net_glob = Lenet(args=args).to(args.device)
     elif args.model == 'VGG16':
-        net_glob = VGG16Cifar10(args=args).to(args.device)
+        net_glob = VGG16(args=args).to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -93,15 +93,15 @@ if __name__ == '__main__':
     
     #add noise-----------------------------------------------------------
     np.random.seed(42)
-    if args.bernoulli==0:
+    if args.gaussian:
         # noise_level=0.5 #不是数据的noisy level,是client 层面的level
         # mu=noise_level
-        mu = args.mu #0.3
-        sigma= args.sigma #0.4
+        mu = args.gaus_mu #0.3
+        sigma= args.gaus_sigma #0.4
         noise_degree = (np.random.normal(mu,sigma,args.num_users))  #Guss
-    elif args.bernoulli==1:
-        noise_level = args.bernoulli_p  # 不是数据的noisy level,是client 层面的level
-        noise_degree = bernoulli_function.rvs(1 - noise_level, args.num_users)  # bernoulli
+    elif args.bernoulli:
+        noise_prob = args.bernoulli_p  # 不是数据的noisy level,是client 层面的level
+        noise_degree = bernoulli_function.rvs(1 - noise_prob, args.num_users)  # bernoulli
     # bernoulli=0
     ############
 
@@ -130,13 +130,11 @@ if __name__ == '__main__':
     logpath = f'{args.save_logpath}/{args.dataset}_log'
     if not os.path.exists(logpath):
         os.makedirs(logpath)
-    if args.bernoulli == 0:
+    if args.gaussian:
         f1 = open(logpath + '/%s_BL_%s_result_%s_mu_%s_sigma_%s' % (exp_time, str(args.unbalance), experiment, str(mu), str(sigma)) + '.txt','a+')
-        # f2 = open(logpath + '/%s_test_acc_%s_mu_%s_sigma_%s' % (exp_time, experiment, str(mu), str(sigma)) + '.txt',
-        #           'a+')
-    else:
-        f1 = open(logpath + '/%s_BL_%s_result_%s_noise_level_%s' % (exp_time, str(args.unbalance), experiment, str(noise_level)) + '.txt', 'a+')
-        # f = open(logpath + '/%s_test_acc_%s_noise_level_%s' % (exp_time, experiment, str(noise_level)) + '.txt', 'a+')
+    elif args.bernoulli:
+        f1 = open(logpath + '/%s_BL_%s_result_%s_noise_level_%s' % (exp_time, str(args.unbalance), experiment, str(args.bernoulli_p)) + '.txt', 'a+')
+
     f1.write(str(args))
     f1.write("\n")
     # f2.write(str(args))
@@ -260,7 +258,7 @@ if __name__ == '__main__':
             else:
                 server_state, w_glob= agg_feddyn(args,net_glob,w_locals,server_stat)
                 w_glob=w_glob.state_dict()
-        elif avg_w==0 and avg_l ==0:
+        elif args.mode== "fedavg":
             w_glob = FedAvg(w_locals)
         elif avg_w==3 and avg_l ==0:
             w_glob,noise_clients=FedAvg_withDetectionNoise(w_locals, w_glob)
@@ -272,7 +270,7 @@ if __name__ == '__main__':
                 print("noise_clients_all_list", noise_client_list)
 
 
-        elif avg_w ==2 :
+        elif args.mode== "fedncl":
             w_glob,weight_dis,wc,noise_clients=FedAvg_noise_layer_weight(args,w_locals, w_glob,epoch,client_datalen,loss_locals) #也要返回异常的client的id，然后记下来，下次抽到整个client，就开始打pseudo label
             print("noise_clients",noise_clients)
             print("noise_clients_idx",[idxs_users[cl] for cl in noise_clients])
@@ -301,7 +299,7 @@ if __name__ == '__main__':
                 if args.bernoulli==0:
                     path_to_save = f"./model_checkpoint/Guss_{sigma}_{mu}/{args.dataset}_{args.model}/{exp_time}/"
                 else:
-                    path_to_save = f"./model_checkpoint/Bernoulli_{noise_level}/{args.dataset}_{args.model}/{exp_time}/"
+                    path_to_save = f"./model_checkpoint/Bernoulli_{noise_prob}/{args.dataset}_{args.model}/{exp_time}/"
                 if not os.path.exists(path_to_save):
                     os.makedirs(path_to_save)
                 torch.save(weight_dis, path_to_save + f'Global_Epoch_{epoch}_weight_distance.npy')

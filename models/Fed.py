@@ -68,95 +68,6 @@ def FedAvg(w):
     return w_avg
 
 
-def FedAvg_noise_loss(w, data_quality, w_glob):
-    dc = list()
-    wc = list()
-    for i in range(len(data_quality)):
-        dc.append(1 / data_quality[i])
-    sum_dc = np.sum(dc)
-    for i in range(len(data_quality)):
-        dc[i] = dc[i] / sum_dc
-
-    w_avg = copy.deepcopy(w[0])
-    for k in w_avg.keys():
-        w_avg[k] = w_avg[k] * dc[0]
-    for k in w_avg.keys():
-        for i in range(1, len(w)):
-            w_avg[k] += w[i][k] * dc[i]
-        # w_avg[k] = torch.div(w_avg[k], len(w))
-    return w_avg
-
-
-def FedAvg_noise_loss_and_weight(w, data_quality, w_glob):
-    dc = list()
-    wc = list()
-    for i in range(len(data_quality)):
-        dc.append(1 / data_quality[i])
-    sum_dc = np.sum(dc)
-    for i in range(len(data_quality)):
-        dc[i] = dc[i] / sum_dc
-
-    for i in range(len(data_quality)):
-        wc.append(0)
-        for k in w_glob.keys():
-            wc[i] = wc[i] + (distance(w_glob[k], w[i][k]))
-
-    for i in range(len(data_quality)):
-        wc[i] = (1 / wc[i]).cpu()
-
-    sum_wc = np.sum(wc)
-    for i in range(len(data_quality)):
-        wc[i] = wc[i] / sum_wc
-
-    w_avg = copy.deepcopy(w[0])
-    for k in w_avg.keys():
-        w_avg[k] = w_avg[k] * (dc[0] + wc[0]) / 2
-    for k in w_avg.keys():
-        for i in range(1, len(w)):
-            w_avg[k] += w[i][k] * (dc[i] + wc[i]) / 2
-        # w_avg[k] = torch.div(w_avg[k], len(w))
-    return w_avg
-
-
-def FedAvg_noise_weight(w, data_quality, w_glob):
-    dc = list()
-    wc = list()
-    for i in range(len(data_quality)):
-        dc.append(1 / data_quality[i])
-    sum_dc = np.sum(dc)
-    for i in range(len(data_quality)):
-        dc[i] = dc[i] / sum_dc
-
-    for i in range(len(data_quality)):
-        wc.append(0)
-        for k in w_glob.keys():
-            # c[i] = wc[i]+(distance(w_glob[k], w[i][k]))
-            wc[i] = wc[i] + distance(FedAvg(w)[k], w[i][k]).cpu()
-
-    # print("dc  loss      ",data_quality)
-    # print("wc   dis      ",wc)
-    for i in range(len(data_quality)):
-        wc[i] = 1 / wc[i]
-
-    sum_wc = np.sum(wc)
-    for i in range(len(data_quality)):
-        wc[i] = wc[i] / sum_wc
-
-    wc_list = list()
-    for i in range(len(data_quality)):
-        wc_list.append(wc[i].data)
-
-    # print("dc            ",dc)
-    # print("wc            ",wc_list)
-    w_avg = copy.deepcopy(w[0])
-    for k in w_avg.keys():
-        w_avg[k] = w_avg[k] * wc[0]
-    for k in w_avg.keys():
-        for i in range(1, len(w)):
-            w_avg[k] += w[i][k] * wc[i]
-        # w_avg[k] = torch.div(w_avg[k], len(w))
-    return w_avg
-
 
 def FedAvg_noise_layer_weight(arg, w, w_glob, epoch,client_datalen,loss_locals):
     wc = torch.zeros((len(w_glob.keys()), len(w)))
@@ -181,18 +92,11 @@ def FedAvg_noise_layer_weight(arg, w, w_glob, epoch,client_datalen,loss_locals):
     print("Total_unscale_divergence ", all_w)
     client_datasize = torch.from_numpy(np.array(client_datalen))
     loss_locals=torch.from_numpy(np.array(loss_locals))
-    if arg.only_ce:
-        all_w = loss_locals / client_datasize
-    elif arg.only_modeldist:
-        all_w = all_w / client_datasize
-    else:
-        all_w = all_w * loss_locals / client_datasize
+    all_w = all_w * loss_locals / client_datasize
     noise_client = all_w * (abs(all_w - all_w.mean()) > arg.std_num * all_w.std())
     noise_client = noise_client.nonzero().view(-1).tolist()
     if len(noise_client) > 0:
-        if arg.wo_plently:
-            current = 1
-        elif epoch > arg.pl_epoch:
+        if epoch > arg.pl_epoch:
             # current = np.clip((epoch-arg.pl_epoch )/ 3, 1.1, 1.5)
             current = arg.penalty
         else:
@@ -219,61 +123,19 @@ def FedAvg_noise_layer_weight(arg, w, w_glob, epoch,client_datalen,loss_locals):
         print("Total_divergence ", all_w)
         print("Total_wc ", all_w)
 
-    # sum_wc = np.sum(wc)
-    # for i in range(len(data_quality)):
-    #     wc[i] = wc[i] / sum_wc
-    #
-    # wc_list = list()
-    # for i in range(len(data_quality)):
-    #     wc_list.append(wc[i].data)
-
-    # print("dc            ",dc)
-    #
-
     w_avg = copy.deepcopy(w[0])
-    if arg.reweight_classifier:
-        for layer_id in range(len(model_paratmeter_key_list)):
-            if arg.layer_agg:
-                if 'classifier' in model_paratmeter_key_list[layer_id]:
-                    w_avg[model_paratmeter_key_list[layer_id]] = w_avg[model_paratmeter_key_list[layer_id]] * wc[
-                        layer_id, 0]  # layer-wise agg
-                else:
-                    w_avg[model_paratmeter_key_list[layer_id]] = w_avg[model_paratmeter_key_list[layer_id]] * (
-                                1 / len(w))
-            else:
-                w_avg[model_paratmeter_key_list[layer_id]] = w_avg[model_paratmeter_key_list[layer_id]] * all_w[
-                    0]  # 总的divergence
-        for layer_id in range(len(model_paratmeter_key_list)):
-            for i in range(1, len(w)):
-                # w_avg[k] += w[i][k] * wc[i]
-                if arg.layer_agg:
-                    if 'classifier' in model_paratmeter_key_list[layer_id]:
-                        w_avg[model_paratmeter_key_list[layer_id]] += w[i][model_paratmeter_key_list[layer_id]] * wc[
-                            layer_id, i]
-                    else:
-                        w_avg[model_paratmeter_key_list[layer_id]] += w[i][model_paratmeter_key_list[layer_id]] * (
-                                    1 / len(w))
-                else:
-                    w_avg[model_paratmeter_key_list[layer_id]] += w[i][model_paratmeter_key_list[layer_id]] * all_w[
-                        i]  ## 总的divergence
-    else:
-        for layer_id in range(len(model_paratmeter_key_list)):
-            if arg.layer_agg:
-                w_avg[model_paratmeter_key_list[layer_id]] = w_avg[model_paratmeter_key_list[layer_id]] * wc[
-                    layer_id, 0]  # layer-wise agg
-            else:
-                w_avg[model_paratmeter_key_list[layer_id]] = w_avg[model_paratmeter_key_list[layer_id]] * all_w[
-                    0]  # 总的divergence
-        for layer_id in range(len(model_paratmeter_key_list)):
-            for i in range(1, len(w)):
-                # w_avg[k] += w[i][k] * wc[i]
-                if arg.layer_agg:
-                    w_avg[model_paratmeter_key_list[layer_id]] += w[i][model_paratmeter_key_list[layer_id]] * wc[
-                        layer_id, i]
-                else:
-                    w_avg[model_paratmeter_key_list[layer_id]] += w[i][model_paratmeter_key_list[layer_id]] * all_w[
-                        i]  ## 总的divergence
-        # w_avg[k] = torch.div(w_avg[k], len(w))
+
+
+    for layer_id in range(len(model_paratmeter_key_list)):
+        w_avg[model_paratmeter_key_list[layer_id]] = w_avg[model_paratmeter_key_list[layer_id]] * wc[
+                layer_id, 0]  # layer-wise agg
+
+    for layer_id in range(len(model_paratmeter_key_list)):
+        for i in range(1, len(w)):
+            # w_avg[k] += w[i][k] * wc[i]
+            w_avg[model_paratmeter_key_list[layer_id]] += w[i][model_paratmeter_key_list[layer_id]] * wc[
+                    layer_id, i]
+    # w_avg[k] = torch.div(w_avg[k], len(w))
     return w_avg, weight_dis, wc, noise_client
 
 
@@ -311,15 +173,6 @@ def distance(w_global, w_local):
     return torch.norm(w_d, 2)  # L2
     # return torch.cosine_similarity(w_global[0],w_local[0]) #L2
 
-def FedBN(server_model,client_weight):
-    for key in server_model.state_dict().keys():
-        if 'bn' not in key:
-            temp = torch.zeros_like(server_model.state_dict()[key], dtype=torch.float32)
-            for client_idx in range(client_num):
-                temp += client_weights[client_idx] * models[client_idx].state_dict()[key]
-            server_model.state_dict()[key].data.copy_(temp)
-            for client_idx in range(client_num):
-                models[client_idx].state_dict()[key].data.copy_(server_model.state_dict()[key])
 
 
 def agg_feddyn(args,global_model,uploaded_models,server_state):
