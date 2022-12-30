@@ -17,8 +17,7 @@ from utils.options import args_parser
 from models.Update import LocalUpdate
 from utils.data_preprocessing import generated_noise_data
 from nets.models import  Lenet ,  VGG16
-from models.Fed import FedAvg, FedAvg_noise_loss, FedAvg_noise_weight, FedAvg_noise_loss_and_weight, \
-    FedAvg_noise_layer_weight, FedAvg_withDetectionNoise, trimmed_mean, agg_feddyn
+from models.Fed import FedAvg, FedAvg_noise_layer_weight, FedAvg_withDetectionNoise, trimmed_mean, agg_feddyn
 from models.test import test_img
 
 
@@ -242,23 +241,23 @@ if __name__ == '__main__':
 
         # update global weights
         #w_glob = FedAvg(w_locals)    FedAvg, FedAvg_noise_loss, FedAvg_noise_weight,FedAvg_noise_loss_and_weight
-        #
-        if avg_w==1 and avg_l ==1:
-            w_glob = FedAvg_noise_loss_and_weight(w_locals, data_quality, w_glob)
-        elif avg_w==0 and avg_l ==1:
-            w_glob = FedAvg_noise_loss(w_locals, data_quality, w_glob)
-        elif avg_w==1 and avg_l ==0:
-            w_glob = FedAvg_noise_weight(w_locals, data_quality, w_glob)
-        elif avg_w==4 and avg_l ==4:
-            w_glob = trimmed_mean(w_locals,args)
-        elif avg_w==5 and avg_l ==5:
-            if epoch==0:
-                w_glob = FedAvg(w_locals)
-                server_state=net_glob.load_state_dict(w_glob)
-            else:
-                server_state, w_glob= agg_feddyn(args,net_glob,w_locals,server_stat)
-                w_glob=w_glob.state_dict()
-        elif args.mode== "fedavg":
+        # avg_w==1 and avg_l ==1:
+        #             w_glob = FedAvg_noise_loss_and_weight(w_locals, data_quality, w_glob)
+        #         elif avg_w==0 and avg_l ==1:
+        #             w_glob = FedAvg_noise_loss(w_locals, data_quality, w_glob)
+        #         elif avg_w==1 and avg_l ==0:
+        #             w_glob = FedAvg_noise_weight(w_locals, data_quality, w_glob)
+        #         elif avg_w==4 and avg_l ==4:
+        #             w_glob = trimmed_mean(w_locals,args)
+        #         elif avg_w==5 and avg_l ==5:
+        #             if epoch==0:
+        #                 w_glob = FedAvg(w_locals)
+        #                 server_state=net_glob.load_state_dict(w_glob)
+        #             else:
+        #                 server_state, w_glob= agg_feddyn(args,net_glob,w_locals,server_stat)
+        #                 w_glob=w_glob.state_dict()
+        #         elif
+        if args.mode== "fedavg":
             w_glob = FedAvg(w_locals)
         elif avg_w==3 and avg_l ==0:
             w_glob,noise_clients=FedAvg_withDetectionNoise(w_locals, w_glob)
