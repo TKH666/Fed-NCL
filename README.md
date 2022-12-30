@@ -10,7 +10,7 @@ This is the PyTorch implemention of [Federated Noisy Client Learning](https://ar
 
 ### Setup
 
-todo1
+todo
 
 
 

@@ -139,26 +139,6 @@ def FedAvg_noise_layer_weight(arg, w, w_glob, epoch,client_datalen,loss_locals):
     return w_avg, weight_dis, wc, noise_client
 
 
-def FedAvg_withDetectionNoise(w, w_glob):
-    wc = torch.zeros((len(w_glob.keys()), len(w)))
-    # new_glob_w = FedAvg(w)
-
-    model_paratmeter_key_list = list(w_glob.keys())
-    for client in range(len(w)):
-        for k in w_glob.keys():
-            # c[i] = wc[i]+(distance(w_glob[k], w[i][k]))
-            wc[model_paratmeter_key_list.index(k), client] = distance(w_glob[k], w[client][k]).cpu() + 1
-
-    all_w = wc.sum(dim=0)
-    noise_client = all_w * ((all_w - all_w.mean()) > 1 * all_w.std())
-    noise_client = noise_client.nonzero().view(-1).tolist()
-
-    w_avg = copy.deepcopy(w[0])
-    for k in w_avg.keys():
-        for i in range(1, len(w)):
-            w_avg[k] += w[i][k]
-        w_avg[k] = torch.div(w_avg[k], len(w))
-    return w_avg, noise_client
 
 
 def distance(w_global, w_local):

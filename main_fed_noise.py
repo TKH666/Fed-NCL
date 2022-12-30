@@ -17,7 +17,7 @@ from utils.options import args_parser
 from models.Update import LocalUpdate
 from utils.data_preprocessing import generated_noise_data
 from nets.models import  Lenet ,  VGG16
-from models.Fed import FedAvg, FedAvg_noise_layer_weight, FedAvg_withDetectionNoise, trimmed_mean, agg_feddyn
+from models.Fed import FedAvg, FedAvg_noise_layer_weight, trimmed_mean, agg_feddyn
 from models.test import test_img
 
 
@@ -89,17 +89,14 @@ if __name__ == '__main__':
 
 
     #settings
-    
     #add noise-----------------------------------------------------------
     np.random.seed(42)
     if args.gaussian:
-        # noise_level=0.5 #不是数据的noisy level,是client 层面的level
-        # mu=noise_level
         mu = args.gaus_mu #0.3
         sigma= args.gaus_sigma #0.4
         noise_degree = (np.random.normal(mu,sigma,args.num_users))  #Guss
     elif args.bernoulli:
-        noise_prob = args.bernoulli_p  # 不是数据的noisy level,是client 层面的level
+        noise_prob = args.bernoulli_p
         noise_degree = bernoulli_function.rvs(1 - noise_prob, args.num_users)  # bernoulli
     # bernoulli=0
     ############
@@ -109,12 +106,6 @@ if __name__ == '__main__':
     #avg method---------------------------------------------------------------
     avg_w=args.avg_w
     avg_l=args.avg_l
-
-    # print(noise_degree) 1是 noise, 0 是clena
-    # exit(0)
-
-
-
 
 
     experiment=""
@@ -240,35 +231,8 @@ if __name__ == '__main__':
 
 
         # update global weights
-        #w_glob = FedAvg(w_locals)    FedAvg, FedAvg_noise_loss, FedAvg_noise_weight,FedAvg_noise_loss_and_weight
-        # avg_w==1 and avg_l ==1:
-        #             w_glob = FedAvg_noise_loss_and_weight(w_locals, data_quality, w_glob)
-        #         elif avg_w==0 and avg_l ==1:
-        #             w_glob = FedAvg_noise_loss(w_locals, data_quality, w_glob)
-        #         elif avg_w==1 and avg_l ==0:
-        #             w_glob = FedAvg_noise_weight(w_locals, data_quality, w_glob)
-        #         elif avg_w==4 and avg_l ==4:
-        #             w_glob = trimmed_mean(w_locals,args)
-        #         elif avg_w==5 and avg_l ==5:
-        #             if epoch==0:
-        #                 w_glob = FedAvg(w_locals)
-        #                 server_state=net_glob.load_state_dict(w_glob)
-        #             else:
-        #                 server_state, w_glob= agg_feddyn(args,net_glob,w_locals,server_stat)
-        #                 w_glob=w_glob.state_dict()
-        #         elif
         if args.mode== "fedavg":
             w_glob = FedAvg(w_locals)
-        elif avg_w==3 and avg_l ==0:
-            w_glob,noise_clients=FedAvg_withDetectionNoise(w_locals, w_glob)
-            print("noise_clients", noise_clients)
-            if args.pseudo_label and epoch > args.pl_epoch:
-                for cl in noise_clients:
-                    if idxs_users[cl] not in noise_client_list:
-                        noise_client_list.append(idxs_users[cl])
-                print("noise_clients_all_list", noise_client_list)
-
-
         elif args.mode== "fedncl":
             w_glob,weight_dis,wc,noise_clients=FedAvg_noise_layer_weight(args,w_locals, w_glob,epoch,client_datalen,loss_locals) #也要返回异常的client的id，然后记下来，下次抽到整个client，就开始打pseudo label
             print("noise_clients",noise_clients)
@@ -294,21 +258,9 @@ if __name__ == '__main__':
                 f1.write(f"Epoch{epoch} final client:" + str(
                     true_noise_client_list) + f"\nEpoch {epoch} Detect Accuracy: {detect_acc / len(noise_idx)}\n")
 
-            if args.save_checkpoint:
-                if args.bernoulli==0:
-                    path_to_save = f"./model_checkpoint/Guss_{sigma}_{mu}/{args.dataset}_{args.model}/{exp_time}/"
-                else:
-                    path_to_save = f"./model_checkpoint/Bernoulli_{noise_prob}/{args.dataset}_{args.model}/{exp_time}/"
-                if not os.path.exists(path_to_save):
-                    os.makedirs(path_to_save)
-                torch.save(weight_dis, path_to_save + f'Global_Epoch_{epoch}_weight_distance.npy')
-                torch.save(wc, path_to_save + f'Global_Epoch_{epoch}_weight_matrix.npy')
-                torch.save(torch.Tensor(selected_noise), path_to_save + f'Global_Epoch_{epoch}_select_noise.npy')
+
         else :
             exit("Error Unknown Aggregation Method")
-
-
-
 
 
         #w_glob = FedAvg(w_locals)
@@ -338,8 +290,6 @@ if __name__ == '__main__':
         print("test accuracy: {:.2f}".format(acc_test))
         f1.write(f"Epoch {epoch} test loss: {loss_test} ,test accuracy: {acc_test} Average loss: {loss_avg}\n")
         f1.flush()
-        # f1.seek(0)
-        # f2.seek(0)
 
     # plot loss curve
     plt.figure()
