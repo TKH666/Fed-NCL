@@ -10,7 +10,9 @@ This is the PyTorch implemention of [Federated Noisy Client Learning](https://ar
 
 ### Setup
 
-todo1
+##### conda
+
+We recommend using conda to quick setup the environment. Please use the following commands.
 
 
 
