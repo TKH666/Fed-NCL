@@ -24,8 +24,8 @@ def args_parser():
     # other arguments
     parser.add_argument('--dataset', type=str, default='cifar10', help="name of dataset")              # mnist cifar10 cifar100  tiny_imagenet fashion_mnist ##########################
     parser.add_argument('--iid', action='store_true',default=False, help='whether i.i.d or not')         #################################
-    parser.add_argument('--alpha_dirichlet', type=int,default=1000, help='whether i.i.d or not')         #################################
-    parser.add_argument('--p_dirichlet', type=float,default=1, help='whether i.i.d or not')         #################################
+    parser.add_argument('--alpha_dirichlet', type=int,default=1000, help='noniid parameter for dirichlet distribution')         #################################
+    parser.add_argument('--p_dirichlet', type=float,default=1, help='noniid parameter for dirichlet distribution')         #################################
     parser.add_argument('--unbalance', type=bool, default=False,
                         help="unbalanced_sgm")  # 10 100 200                ##############################
     parser.add_argument('--unbalanced_sgm', type=float, default=0.3, help="unbalanced_sgm")
@@ -38,16 +38,17 @@ def args_parser():
     parser.add_argument('--penalty', type=int, default=50, help='penalty tau')
     parser.add_argument('--start_penalty', type=int, default=10, help='penalty tau')
     parser.add_argument('--pl_ratio', type=float, default=0.5, help='大于pl_ratio*pl_epoch的比例')
+    parser.add_argument('--pl_epoch', type=int, default=60, help='global round for label correction')
     parser.add_argument('--save_logpath', type=str, default='/home/tamkahou/Documents/fed/federated-learning-master_noise_cvpr', help='log save path')
     parser.add_argument('--all_clients',  default=False, action='store_true', help='aggregation over all clients')  ##
     parser.add_argument('--save_checkpoint', type=bool, default=True, help='whether save the weight distance and weight matrix or not')
 
-    parser.add_argument('--bernoulli', type=bool, help='1 is bernoulli; 0 for Guss')
+    parser.add_argument('--bernoulli', type=bool, help='noisy client scenario with bernoulli distribution')
     parser.add_argument('--bernoulli_p', type=float, default=0.7, help='clean client probability for bernoulli Distribution')
-    parser.add_argument('--gaussian', type=bool,  help='1 is bernoulli; 0 for Guss')
+    parser.add_argument('--gaussian', type=bool,  help='noisy client scenario with gaussian distribution')
     parser.add_argument('--gaus_mu', type=float, default=0.3, help='mean for Truncated Gaussian Distribution')
     parser.add_argument('--gaus_sigma', type=float, default=0.4, help='variance for Truncated Gaussian Distribution')
-    parser.add_argument('--pl_epoch', type=int, default=60, help='global round for label correction')
+
 
     # parser.add_argument('--layer_agg', type=bool, default=True, help='使用layer divergence作为weight还是整个model的divergence作为weight')
     # parser.add_argument('--exp_note', type=str, default="fedprox测试利用上一个global mode avg, 1 frac，guss 0.3/0.4 noise,10个client，VGG16Cifar10，fedavg,layer agg 并且增大20差距,大为标签之后为1.1-1.5，70 psudo label,150 epoch,,Data cifar10，测试0，1正态分布筛选", help='exp note')
