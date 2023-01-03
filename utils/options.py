@@ -39,9 +39,9 @@ def args_parser():
     parser.add_argument('--start_penalty', type=int, default=10, help='penalty tau')
     parser.add_argument('--pl_ratio', type=float, default=0.5, help='大于pl_ratio*pl_epoch的比例')
     parser.add_argument('--pl_epoch', type=int, default=60, help='global round for label correction')
-    parser.add_argument('--save_logpath', type=str, default='/home/tamkahou/Documents/fed/federated-learning-master_noise_cvpr', help='log save path')
+    parser.add_argument('--save_logpath', type=str, default='./', help='log save path')
     parser.add_argument('--all_clients',  default=False, action='store_true', help='aggregation over all clients')  ##
-    parser.add_argument('--save_checkpoint', type=bool, default=True, help='whether save the weight distance and weight matrix or not')
+    # parser.add_argument('--save_checkpoint', type=bool, default=True, help='whether save the weight distance and weight matrix or not')
 
     parser.add_argument('--bernoulli', type=bool, help='noisy client scenario with bernoulli distribution')
     parser.add_argument('--bernoulli_p', type=float, default=0.7, help='clean client probability for bernoulli Distribution')
